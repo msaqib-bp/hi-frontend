@@ -18,6 +18,23 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ApiError, api } from "@/lib/api";
 
+/**
+ * Sign-in details offered on the page so a judge can get in without being handed
+ * credentials out of band.
+ *
+ * Read from the environment rather than written here because this repository is public,
+ * and a working admin password committed to it stays in the git history permanently —
+ * long after the deployment it belonged to is gone. Set `NEXT_PUBLIC_DEMO_PASSWORD` in
+ * the hosting dashboard and rebuild.
+ *
+ * With no password configured the panel is hidden entirely. That is deliberate: the
+ * previous version printed a hard-coded password that stopped being the real one the
+ * moment `ADMIN_PASSWORD` was changed on the server, so it confidently told everyone the
+ * wrong thing. Showing nothing is better than showing a credential that does not work.
+ */
+const DEMO_EMAIL = process.env.NEXT_PUBLIC_DEMO_EMAIL ?? "admin@civic.gov";
+const DEMO_PASSWORD = process.env.NEXT_PUBLIC_DEMO_PASSWORD ?? "";
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -93,22 +110,26 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          {/* Demo credentials, shown because this is a hackathon deployment judges
-              need to get into. A real deployment would not print these. */}
-          <div className="mt-5 rounded-lg border border-dashed p-3 text-xs text-muted-foreground">
-            <p className="font-medium text-foreground">Demo credentials</p>
-            <p className="mt-1 font-mono">admin@civic.gov / admin123</p>
-            <button
-              type="button"
-              className="mt-2 underline underline-offset-2 hover:text-foreground"
-              onClick={() => {
-                setEmail("admin@civic.gov");
-                setPassword("admin123");
-              }}
-            >
-              Fill them in
-            </button>
-          </div>
+          {/* Shown because this is a hackathon deployment judges need to get into.
+              A real deployment would not print these. */}
+          {DEMO_PASSWORD ? (
+            <div className="mt-5 rounded-lg border border-dashed p-3 text-xs text-muted-foreground">
+              <p className="font-medium text-foreground">Demo credentials</p>
+              <p className="mt-1 font-mono break-all">
+                {DEMO_EMAIL} / {DEMO_PASSWORD}
+              </p>
+              <button
+                type="button"
+                className="mt-2 underline underline-offset-2 hover:text-foreground"
+                onClick={() => {
+                  setEmail(DEMO_EMAIL);
+                  setPassword(DEMO_PASSWORD);
+                }}
+              >
+                Fill them in
+              </button>
+            </div>
+          ) : null}
         </CardContent>
       </Card>
     </div>
