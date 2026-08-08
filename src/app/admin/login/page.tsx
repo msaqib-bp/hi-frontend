@@ -19,21 +19,22 @@ import { Label } from "@/components/ui/label";
 import { ApiError, api } from "@/lib/api";
 
 /**
- * Sign-in details offered on the page so a judge can get in without being handed
+ * Sign-in details printed on the page so a judge can get in without being handed
  * credentials out of band.
  *
- * Read from the environment rather than written here because this repository is public,
- * and a working admin password committed to it stays in the git history permanently —
- * long after the deployment it belonged to is gone. Set `NEXT_PUBLIC_DEMO_PASSWORD` in
- * the hosting dashboard and rebuild.
+ * These are the live account's real credentials, deliberately committed so the panel
+ * works with no configuration — this deployment exists to be walked into by strangers,
+ * and an unlisted password defeats that. The account is a demo administrator over
+ * seeded data; it holds nothing that matters.
  *
- * With no password configured the panel is hidden entirely. That is deliberate: the
- * previous version printed a hard-coded password that stopped being the real one the
- * moment `ADMIN_PASSWORD` was changed on the server, so it confidently told everyone the
- * wrong thing. Showing nothing is better than showing a credential that does not work.
+ * Two consequences worth being explicit about, since this repository is public:
+ * the password is in the git history permanently and rotating it later will not remove
+ * it, and it must stay in step with `ADMIN_PASSWORD` on the API or this panel tells
+ * every visitor something that does not work. `NEXT_PUBLIC_DEMO_PASSWORD` overrides it
+ * without a code change; setting that variable to an empty string hides the panel.
  */
 const DEMO_EMAIL = process.env.NEXT_PUBLIC_DEMO_EMAIL ?? "admin@civic.gov";
-const DEMO_PASSWORD = process.env.NEXT_PUBLIC_DEMO_PASSWORD ?? "";
+const DEMO_PASSWORD = process.env.NEXT_PUBLIC_DEMO_PASSWORD ?? "Saqib##1";
 
 export default function LoginPage() {
   const router = useRouter();
