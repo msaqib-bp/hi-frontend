@@ -58,6 +58,8 @@ export interface AIOutput {
   keywords: string[];
   matched_terms?: string[];
   engine: string | null;
+  /** Which vendor produced this: "local", "anthropic", "deepseek", … */
+  provider?: string | null;
   model_version: string | null;
   processing_ms: number | null;
   notes: string[];
@@ -244,6 +246,8 @@ export interface AnalyticsOverview {
 export interface AIStatus {
   ml_available: boolean;
   llm_available: boolean;
+  /** "anthropic" | "deepseek" | "openai-compatible" | "none" */
+  llm_provider: string;
   active_engine: string;
   model_version: string;
   categories: string[];

@@ -24,7 +24,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
-import { formatDateTime } from "@/lib/domain";
+import { formatDateTime, providerLabel } from "@/lib/domain";
 import type { AssistantResponse } from "@/lib/types";
 
 export default function AIPage() {
@@ -87,7 +87,12 @@ export default function AIPage() {
                     ) : (
                       <MinusCircle className="h-4 w-4 text-muted-foreground" />
                     )}
-                    <span className="text-sm font-medium">Claude (optional)</span>
+                    <span className="text-sm font-medium">
+                      {status.data.llm_available
+                        ? providerLabel(status.data.llm_provider)
+                        : "Language model"}{" "}
+                      (optional)
+                    </span>
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {status.data.llm_available
@@ -106,6 +111,12 @@ export default function AIPage() {
                   <dt className="text-muted-foreground">Model version</dt>
                   <dd className="font-mono text-xs">{status.data.model_version}</dd>
                 </div>
+                {status.data.llm_available && (
+                  <div className="flex justify-between gap-3 border-b py-1.5">
+                    <dt className="text-muted-foreground">LLM provider</dt>
+                    <dd className="font-mono text-xs">{status.data.llm_provider}</dd>
+                  </div>
+                )}
                 {status.data.trained_at && (
                   <div className="flex justify-between gap-3 border-b py-1.5">
                     <dt className="text-muted-foreground">Trained</dt>
@@ -225,9 +236,9 @@ export default function AIPage() {
               <div className="rounded-lg border bg-muted/40 p-3">
                 <div className="mb-2 flex items-center gap-1.5 text-xs text-muted-foreground">
                   <Bot className="h-3.5 w-3.5" />
-                  {answer.engine === "llm"
-                    ? "Answered by Claude, grounded on live statistics"
-                    : "Statistics digest (no API key configured)"}
+                  {answer.engine === "statistics"
+                    ? "Statistics digest (no API key configured)"
+                    : `Answered by ${providerLabel(answer.engine)}, grounded on live statistics`}
                 </div>
                 <p className="whitespace-pre-wrap text-sm">{answer.answer}</p>
               </div>

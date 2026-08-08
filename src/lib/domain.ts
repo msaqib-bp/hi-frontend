@@ -176,15 +176,43 @@ export function confidenceLabel(confidence: number | null | undefined): {
   return { label: "low confidence — review", tone: "low" };
 }
 
-/** How the AI engine that produced a result should be described in the UI. */
-export function engineLabel(engine: string | null | undefined): string {
+/** Display name for an LLM vendor. */
+export function providerLabel(provider: string | null | undefined): string {
+  switch (provider) {
+    case "anthropic":
+      return "Claude";
+    case "deepseek":
+      return "DeepSeek";
+    case "openai-compatible":
+      return "language model";
+    case "local":
+    case "none":
+    case null:
+    case undefined:
+      return "language model";
+    default:
+      return provider;
+  }
+}
+
+/**
+ * How the AI engine that produced a result should be described in the UI.
+ *
+ * The vendor is named rather than hard-coded, because the deployment may be running on
+ * Claude, on DeepSeek, or on no language model at all — and an operator reading a
+ * prediction should be able to tell which, without checking the server config.
+ */
+export function engineLabel(
+  engine: string | null | undefined,
+  provider?: string | null,
+): string {
   switch (engine) {
     case "ml":
       return "Local ML model";
     case "llm":
-      return "Claude";
+      return providerLabel(provider);
     case "hybrid":
-      return "ML + Claude";
+      return `ML + ${providerLabel(provider)}`;
     case "fallback":
       return "Keyword rules (models unavailable)";
     default:
