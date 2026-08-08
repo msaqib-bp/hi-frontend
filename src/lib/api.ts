@@ -29,6 +29,36 @@ export const API_BASE_URL = (
 ).replace(/\/$/, "");
 
 const API_PREFIX = "/api/v1";
+
+const LOCAL_HOSTNAMES = new Set(["localhost", "127.0.0.1", "0.0.0.0", "[::1]", "::1"]);
+
+function targetsTheViewersOwnMachine(base: string): boolean {
+  try {
+    return LOCAL_HOSTNAMES.has(new URL(base).hostname);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * True when this bundle is asking the *visitor's* computer for the API.
+ *
+ * `NEXT_PUBLIC_*` values are inlined by the compiler, so a deployment built without
+ * `NEXT_PUBLIC_API_URL` carries the literal string `http://localhost:8000` inside its
+ * JavaScript. Every request then goes to whoever opened the page, and fails at the
+ * network layer — which is indistinguishable from a sleeping backend unless we check.
+ *
+ * Worth naming explicitly because the remedy is counter-intuitive: setting the variable
+ * in the hosting dashboard changes nothing on its own. The value is fixed at build time,
+ * so the deployment has to be rebuilt.
+ */
+export function apiTargetIsMisconfigured(): boolean {
+  if (typeof window === "undefined") return false;
+  return (
+    targetsTheViewersOwnMachine(API_BASE_URL) &&
+    !LOCAL_HOSTNAMES.has(window.location.hostname)
+  );
+}
 const TOKEN_STORAGE_KEY = "civic_admin_token";
 
 /** An API failure carrying the backend's structured detail. */
@@ -105,8 +135,21 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
       body: body === undefined ? undefined : JSON.stringify(body),
     });
   } catch {
-    // A network-level failure. On a free Render instance this is usually a cold start
-    // (~50s to wake) rather than an outage, so say so instead of "failed to fetch".
+    // A network-level failure has two very different causes, and the cold-start message
+    // below is actively misleading for the other one — it sends you to check a backend
+    // that is fine.
+    if (apiTargetIsMisconfigured()) {
+      throw new ApiError(
+        `This deployment is calling ${API_BASE_URL}, which is your own computer, not the API. ` +
+          "Set NEXT_PUBLIC_API_URL to the API's public URL and redeploy — the value is " +
+          "compiled into the bundle, so changing it without a rebuild has no effect.",
+        0,
+        "configuration_error",
+      );
+    }
+
+    // On a free Render instance this is usually a cold start (~50s to wake) rather than
+    // an outage, so say so instead of "failed to fetch".
     throw new ApiError(
       "Could not reach the server. If it has been idle it may be waking up — retry in a few seconds.",
       0,
