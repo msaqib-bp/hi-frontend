@@ -1,7 +1,7 @@
 "use client";
 
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
 import { type ChartMode, chartColors } from "@/lib/chart-theme";
 
@@ -14,11 +14,16 @@ import { type ChartMode, chartColors } from "@/lib/chart-theme";
  * Before mount the theme is unknown (the server cannot read it), so this returns the
  * light palette. Charts are client-only and render after hydration, so no flash occurs.
  */
+/** Nothing to subscribe to: the value differs only between server and client render. */
+const NO_SUBSCRIBE = () => () => {};
+
 export function useChartMode() {
   const { resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => setMounted(true), []);
+  const mounted = useSyncExternalStore(
+    NO_SUBSCRIBE,
+    () => true,
+    () => false,
+  );
 
   const mode: ChartMode = mounted && resolvedTheme === "dark" ? "dark" : "light";
   return { mode, colors: chartColors(mode), mounted };

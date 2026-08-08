@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { AlertTriangle, ArrowRight, Copy, Loader2, Send } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -55,6 +55,7 @@ const EXAMPLES = [
 
 export function ReportForm() {
   const [result, setResult] = useState<ComplaintCreateResponse | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const {
     register,
@@ -82,8 +83,13 @@ export function ReportForm() {
       setResult(data);
       reset();
       toast.success(`Complaint ${data.complaint.reference_code} submitted`);
-      // The result card renders above the form; scroll so it is visible on mobile.
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      // The result replaces the form in place, and the form may sit well down a long
+      // page — so bring *this* block into view rather than jumping to the top, which
+      // would scroll the reference code off screen. One frame's delay lets the success
+      // view render first. `scroll-padding-top` on <html> keeps it clear of the header.
+      requestAnimationFrame(() =>
+        containerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
+      );
     },
     onError: (error) => {
       toast.error(
@@ -107,7 +113,7 @@ export function ReportForm() {
     const { complaint, possible_duplicates: duplicates } = result;
 
     return (
-      <div className="space-y-6">
+      <div ref={containerRef} className="space-y-6">
         <Card className="border-emerald-200 bg-emerald-50/50 dark:border-emerald-900 dark:bg-emerald-950/20">
           <CardHeader>
             <CardTitle className="text-lg">Complaint received</CardTitle>
@@ -184,7 +190,7 @@ export function ReportForm() {
 
   // --------------------------------------------------------------- form view
   return (
-    <Card>
+    <Card ref={containerRef}>
       <CardHeader>
         <CardTitle>Report a problem</CardTitle>
         <CardDescription>
